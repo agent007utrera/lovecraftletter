@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lovecraft Letter</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Black+Ops+One&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#06100d;color:#d0e4da;font-family:'Share Tech Mono',monospace}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:8px;padding:8px;height:100%;box-sizing:border-box}
+@media(max-width:900px){.layout{grid-template-columns:1fr;grid-template-rows:1fr 170px}}
+.main{position:relative;border:2px solid #1f4a3a;border-radius:4px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#0e2a21 0,#06100d 75%);display:flex;flex-direction:column;min-height:0}
+.main>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.9}
+.top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;gap:8px;flex-wrap:wrap}
+.copy{font-family:'Black Ops One',monospace;font-size:1.05rem;letter-spacing:3px;color:#9fe3bd;text-shadow:0 0 6px #000,0 0 14px #1f8f5b}
+#board{position:relative;z-index:1;flex:1;min-height:0;overflow-y:auto;padding:4px 10px 10px;display:flex;flex-direction:column;gap:8px}
+button,input,select{font:inherit;background:#08181a;color:#7fe0a8;border:1px solid #1f4a3a;border-radius:4px;padding:8px 13px;margin:4px;cursor:pointer}
+input,select{cursor:text}
+button:hover:not(:disabled){background:#0d2a28;box-shadow:0 0 10px rgba(127,224,168,.4)}
+button:disabled{opacity:.35;cursor:default}
+button.no{color:#ff6680;border-color:#ff3355}
+button.on{background:#0f4a3a;border-color:#7fe0a8}
+.btn-top{margin:0;padding:5px 12px;font-size:.85rem}
+.dim{color:#5f8f7b;font-size:.8rem}
+h1,h2{color:#7fe0a8;letter-spacing:3px;margin:.2em 0}
+.panel{align-self:center;margin:auto;width:min(94%,560px);background:rgba(4,14,12,.88);border:1px solid #1f4a3a;border-radius:6px;padding:18px;text-align:center;box-shadow:0 0 25px rgba(47,143,91,.25)}
+.players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.pb{flex:1 1 150px;max-width:230px;min-width:140px;background:rgba(4,14,12,.82);border:1px solid #1f4a3a;border-radius:6px;padding:6px 8px;font-size:.75rem}
+.pb.turn{border-color:#7fe0a8;box-shadow:0 0 12px rgba(127,224,168,.5)}
+.pb.out{opacity:.5;border-style:dashed}
+.pb.me{background:rgba(10,40,32,.85)}
+.pn{font-weight:bold;color:#cfe8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-sane{color:#4da6ff}.st-mad{color:#7fe05a}.st-out{color:#ff3355}
+.dc{margin-top:3px;min-height:18px}
+.chip{display:inline-block;min-width:16px;text-align:center;padding:1px 4px;border-radius:3px;font-size:.68rem;margin:1px;box-sizing:border-box}
+.chip.ar{background:#d9cfa7;color:#2b2a1c}
+.chip.om{background:#0e1f1a;color:#7fe0a8;border:1px solid #2f8f5b}
+.mid{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;justify-content:center}
+.zone{background:rgba(4,14,12,.78);border:1px solid #1f4a3a;border-radius:6px;padding:8px;text-align:center;font-size:.72rem}
+.zone .zt{color:#5f8f7b;letter-spacing:2px;margin-bottom:4px}
+.playzone{flex:1 1 280px;min-width:260px}
+.logbox{flex:0 1 250px;min-width:200px;max-height:230px;overflow-y:auto;text-align:left;font-size:.7rem;line-height:1.35}
+.logbox div{margin:1px 0}
+#refview{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.94);align-items:center;justify-content:center;cursor:pointer;color:#7fe0a8;text-align:center}
+#refview img{max-width:96vw;max-height:96vh;object-fit:contain;display:block}
+.back{display:inline-flex;width:64px;height:90px;border:2px solid #2f8f5b;border-radius:6px;margin:2px 4px;background:repeating-linear-gradient(45deg,#0a2a22 0 6px,#0e3a2d 6px 12px);align-items:center;justify-content:center;color:#9fe3bd;font-family:'Black Ops One',monospace;font-size:1.1rem;vertical-align:top}
+.card{display:inline-flex;flex-direction:column;gap:4px;width:150px;min-height:205px;border-radius:8px;padding:6px 8px;box-sizing:border-box;font-size:.68rem;line-height:1.25;border:3px solid;text-align:left;vertical-align:top}
+.card.ar{background:#d9cfa7;color:#2b2a1c;border-color:#8a6a2a}
+.card.om{background:#0e1f1a;color:#cfe8dc;border-color:#2f8f5b;box-shadow:0 0 12px rgba(47,143,91,.45)}
+.card .cv{font-family:'Black Ops One',monospace;font-size:1.7rem;line-height:1}
+.card .cn{font-family:'Special Elite','Courier New',monospace;font-weight:bold;font-size:.8rem}
+.card .cm{border-top:1px solid currentColor;padding-top:3px;color:#7fe0a8}
+.card .cx{margin-top:auto;font-size:.55rem;letter-spacing:2px;opacity:.7}
+.card.sm{width:118px;min-height:0;font-size:.6rem}
+.card.sm .cv{font-size:1.2rem}
+.card.dead{opacity:.45}
+.hand{position:relative;z-index:1;display:flex;gap:12px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.hcard{text-align:center}
+.hcard button{margin:3px 2px;padding:5px 9px;font-size:.78rem}
+.inpl{display:inline-block;margin:2px 6px;text-align:center}
+.plog{font-size:.72rem;color:#ffd27f;text-align:center}
+.plog div{margin:1px 0}
+#toast{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;max-width:min(90%,460px);background:#d9cfa7;color:#2b2a1c;border:3px double #3d4022;padding:12px 18px;font-family:'Special Elite','Courier New',monospace;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.8);cursor:pointer}
+#zoom{display:none;position:fixed;z-index:80;pointer-events:none;border:3px solid #2f8f5b;border-radius:10px;background:#06100d;box-shadow:0 10px 40px rgba(0,0,0,.9),0 0 18px rgba(47,143,91,.5);overflow:hidden}
+#zoom img{width:100%;height:100%;object-fit:contain;display:block}
+#zoom .card{width:100%;height:100%;font-size:.95rem;border-width:0;border-radius:0;padding:14px}
+#zoom .card .cv{font-size:3rem}
+#zoom .card .cn{font-size:1.2rem}
+[data-card]{cursor:zoom-in}
+.video-sidebar{background:rgba(3,10,8,.95);border:1px solid #1f4a3a;border-radius:4px;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.video-header{padding:10px;background:#08181a;border-bottom:1px solid #1f4a3a;color:#7fe0a8;font-size:.8rem;text-align:center;letter-spacing:1px}
+#video-grid{flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;align-content:start}
+.video-card{position:relative;aspect-ratio:4/3;background:#000;border:1px solid #1f4a3a;border-radius:4px;overflow:hidden}
+.video-card video{width:100%;height:100%;object-fit:cover;display:block}
+.video-name{position:absolute;left:5px;bottom:5px;max-width:calc(100% - 10px);padding:2px 6px;background:rgba(4,14,12,.85);color:#7fe0a8;font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(127,224,168,.3)}
+.video-tag{position:absolute;top:4px;left:6px;font-size:.9rem;z-index:2;text-shadow:0 0 4px #000}
+.aforo-aviso{display:flex;justify-content:space-between;align-items:center;margin:0;padding:6px 4px;border-top:1px solid #1f4a3a;background:#040c0a;color:#5f8f7b;font-size:.7rem}
+.aforo-aviso button{margin:0;padding:2px 8px}
+.aforo-aviso button.off{background:#2a0a0a;border-color:#ff3355;color:#ff3355}
+.aforo-aviso input{margin:0;padding:0;width:110px;border:0;background:none;accent-color:#7fe0a8;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:14px;box-sizing:border-box}
+.modal-box{width:min(96%,820px);max-height:92%;overflow-y:auto;background:#d9cfa7;color:#2b2a1c;border:4px double #3d4022;box-shadow:0 0 0 6px #3d4022,0 14px 40px rgba(0,0,0,.85);font-family:'Special Elite','Courier New',monospace;font-size:.85rem;line-height:1.4}
+.modal-h{display:flex;justify-content:space-between;align-items:center;background:#3d4022;color:#e9e2bd;font-family:'Black Ops One',monospace;letter-spacing:4px;padding:8px 14px;position:sticky;top:0}
+.modal-h button{margin:0;padding:4px 14px;background:#4b5230;color:#ece6c4;border:2px solid #23260f;border-radius:2px;font-family:'Black Ops One',monospace}
+.modal-b{padding:12px 18px}
+.modal-b h3{margin:10px 0 4px;color:#3d4022}
+.modal-b table{border-collapse:collapse;width:100%}
+.modal-b td{border-top:1px solid #8a7a4a;padding:4px 6px;vertical-align:top}
+.reglas-modal iframe{width:min(96%,900px);height:92%;border:0;background:#fff}
+#avs{display:none;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;padding:14px;box-sizing:border-box;background:radial-gradient(ellipse at center,rgba(6,30,22,.75) 0,rgba(0,0,0,.92) 80%);animation:avsIn .35s ease-out}
+#avs.show{display:flex}
+.avs-box{position:relative;width:min(94%,460px);padding:26px 26px 20px;text-align:center;background:linear-gradient(180deg,#0b1f19 0,#050e0b 100%);color:#cfe8dc;border:2px solid #2f8f5b;outline:1px solid #1f4a3a;outline-offset:5px;border-radius:3px;font-family:'Special Elite','Courier New',monospace;box-shadow:0 0 0 1px #000,0 0 30px rgba(47,143,91,.45),0 0 90px rgba(31,143,91,.2),inset 0 0 40px rgba(0,0,0,.8);animation:avsBox .5s cubic-bezier(.2,.9,.3,1.1)}
+.avs-box::before,.avs-box::after{content:'❖';position:absolute;top:6px;color:#2f8f5b;font-size:.9rem;text-shadow:0 0 6px #2f8f5b}
+.avs-box::before{left:10px}.avs-box::after{right:10px}
+.avs-eye{font-size:2.2rem;line-height:1;color:#7fe0a8;text-shadow:0 0 10px #1f8f5b,0 0 24px #1f8f5b;animation:avsPulse 3s ease-in-out infinite}
+.avs-t{margin:10px 0 4px;font-family:'Black Ops One',monospace;font-size:1.15rem;letter-spacing:4px;color:#9fe3bd;text-shadow:0 0 8px #1f8f5b,0 2px 2px #000}
+.avs-sep{margin:8px auto 12px;width:70%;height:1px;background:linear-gradient(90deg,transparent,#2f8f5b,transparent);position:relative}
+.avs-sep::after{content:'☽ ✦ ☾';position:absolute;left:50%;top:-9px;transform:translateX(-50%);background:#08170f;padding:0 8px;color:#5f8f7b;font-size:.7rem;letter-spacing:3px}
+.avs-m{margin:16px 0 18px;font-size:.92rem;line-height:1.5;color:#d0e4da;white-space:pre-line;text-shadow:0 1px 2px #000}
+.avs-box button{margin:0;padding:8px 26px;font-family:'Black Ops One',monospace;letter-spacing:3px;background:#0a2a22;color:#9fe3bd;border:1px solid #2f8f5b;box-shadow:0 0 10px rgba(47,143,91,.35)}
+.avs-box button:hover{background:#0f4a3a;box-shadow:0 0 18px rgba(127,224,168,.6)}
+@keyframes avsIn{from{opacity:0}to{opacity:1}}
+@keyframes avsBox{from{opacity:0;transform:scale(.88) translateY(14px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes avsPulse{0%,100%{opacity:.7}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="main">
+    <video id="bg-video" autoplay muted loop playsinline src="images/fondo.mp4" onerror="this.remove()"></video>
+    <div class="top">
+      <span class="copy">AGENT007-UTRERA</span>
+      <span><button class="btn-top" onclick="verRef('lucidez')">🧠 REF. LUCIDEZ</button><button class="btn-top" onclick="verRef('locura')">🌀 REF. LOCURA</button></span>
+      <span><button class="btn-top" onclick="abrir('cartas')">🃏 CARTAS</button><button class="btn-top" onclick="abrirReglas()">📜 REGLAS</button></span>
+    </div>
+    <div id="board"></div>
+  </div>
+  <aside class="video-sidebar">
+    <div class="video-header">LOVECRAFT LETTER · CÁMARAS</div>
+    <div id="video-grid"></div>
+    <p class="aforo-aviso"><button onclick="Cam.mic(this)">🎤</button>🔊<input type="range" min="0" max="100" value="75" oninput="setVol(this.value/100)" title="Volumen"><button onclick="Cam.cam(this)">📷</button></p>
+  </aside>
+</div>
+
+<div id="toast" onclick="this.style.display='none'"></div>
+<div id="avs" role="alertdialog" aria-modal="true" aria-labelledby="avs-t" aria-describedby="avs-m"><div class="avs-box"><div class="avs-eye">𓂀</div><div class="avs-t" id="avs-t"></div><div class="avs-sep"></div><div class="avs-m" id="avs-m"></div><button id="avs-ok" type="button">ACEPTAR</button></div></div>
+<div id="zoom"></div>
+<div id="refview" onclick="cerrarRef()"></div>
+<div id="modal-cartas" class="modal"><div class="modal-box">
+  <div class="modal-h"><span>CARTAS Y RESUMEN</span><button onclick="cerrar('cartas')">✖ CERRAR</button></div>
+  <div class="modal-b" id="cartas-body"></div>
+</div></div>
+<div id="modal-reglas" class="modal reglas-modal">
+  <div style="width:min(96%,900px);height:92%;display:flex;flex-direction:column">
+    <div class="modal-h" style="position:static"><span>REGLAS</span><span><a href="images/lovecraft_reglas.pdf" target="_blank" rel="noopener" style="color:#ece6c4;font-size:.8rem;margin-right:14px">ABRIR EN PESTAÑA</a><button onclick="cerrar('reglas')">✖ CERRAR</button></span></div>
+    <iframe id="reglasPdf" title="Reglas"></iframe>
+  </div>
+</div>
+
+<script src="webcams.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let peer,myId,conn,host=false,st=null,mine={hand:[],plog:[]},H=null,conns={},modo='';
+let selT=null,selV='',rsel={},lastPK='',lastPn=0,tt;
+
+/* ---------- audio ---------- */
+let VOL=.75;
+const snd=n=>{const a=new Audio('audio/'+n+'.mp3');a.play().catch(()=>{})};
+const amb=new Audio('audio/ambiente1.mp3');amb.loop=true;amb.volume=VOL;
+const setVol=v=>{VOL=v;amb.volume=v};
+document.addEventListener('click',e=>{if(e.target.closest('button'))snd('click')});
+
+/*ENGINE-START*/
+/* ---------- datos de cartas (índice = id de carta) ---------- */
+const DEFS=[];
+const addc=(k,v,o,n,c=1)=>{for(let i=0;i<c;i++)DEFS.push({k,v,o,n})};
+addc('thompson',0,0,'Metralleta Thompson');
+addc('rlyeh',0,1,"R'lyeh");
+addc('huevos',0,1,'Huevos de parásitos');
+addc('invest',1,0,'Los investigadores',5);
+addc('sectarios',1,1,'Los sectarios');
+addc('federal',2,0,'El federal',2);
+addc('angel',2,1,'Ángel descarnado');
+addc('boxeador',3,0,'El boxeador',2);
+addc('profundo',3,1,'Profundo');
+addc('pilla',4,0,'La pilla',2);
+addc('necro',4,1,'Necronomicón');
+addc('musico',5,0,'El músico',2);
+addc('parasito',5,1,'Parásito');
+addc('marinero',6,0,'El marinero');
+addc('randall',6,1,'Randall Tillinghast');
+addc('cantante',7,0,'La cantante');
+addc('shoggoth',7,1,'Shoggoth');
+addc('diletante',8,0,'La diletante');
+addc('cthulhu',8,1,'Cthulhu');
+const EGGS=DEFS.findIndex(d=>d.k=='huevos');
+const LUC={
+0:'Elige a cualquier investigador (tú incluido): se revelan 2 cartas del mazo y van a su descarte sin efecto.',
+1:'Elige a otro investigador y di un valor distinto de 1 (el 0 vale). Si el investigador tiene una carta con ese valor, queda eliminado de la ronda.',
+2:'Elige a otro investigador y mira en secreto la carta de su mano.',
+3:'Compara tu carta con la de otro investigador: el valor más bajo queda eliminado de la ronda. Si hay empate, nadie queda eliminado.',
+4:'Hasta el inicio de tu siguiente turno, los demás investigadores no pueden elegirte para resolver los efectos de sus cartas.',
+5:'Elige a cualquier investigador (tú incluido): descarta su carta y roba otra.',
+6:'Intercambia tu mano de cartas con la de otro investigador a tu elección.',
+7:'Debes jugar esta carta si tienes otra carta con un valor de 5 o superior en tu mano.',
+8:'Si juegas o descartas esta carta de tu mano, tu investigador queda eliminado de la ronda.'};
+const LOC={
+huevos:'Si juegas esta carta, tu investigador queda eliminado de la ronda. Descartarla no te elimina.',
+rlyeh:'La siguiente carta del mazo queda visible para todos. En tu próximo turno puedes dar la ronda por terminada.',
+sectarios:'Elige a otro investigador. Si tiene una carta de valor 1, queda eliminado; si no, resuelve el efecto de lucidez de esta carta.',
+angel:'Mira la carta de otro jugador y juega un turno extra (sin prueba de cordura).',
+profundo:'Elige a otro jugador Cuerdo: queda eliminado.',
+necro:'Tu investigador no puede quedar eliminado por efectos de cartas o por pruebas de cordura hasta el final de la ronda.',
+parasito:'Roba la carta de otro investigador (recibe los Huevos de parásitos), mírala y juega 1 de tus 2 cartas.',
+randall:'Reúne las cartas de todos, míralas y reparte 1 a cada jugador.',
+shoggoth:'Si juegas esta carta y tienes una carta de valor 5 o superior en tu mano, ganas la ronda.',
+cthulhu:'Si juega a Cthulhu y tienes 2 o más cartas de Otro Mundo en tu descarte, ganas la partida.'};
+
+/* ---------- utilidades ---------- */
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const P=id=>st.players.find(p=>p.id==id),nm=id=>(P(id)||{}).name||'?',N=()=>st.players.length;
+const cn=c=>DEFS[c].n;
+const alive=()=>st.players.filter(p=>!p.out);
+const isMad=p=>p.discard.some(c=>DEFS[c].o);
+const otherT=a=>alive().filter(p=>p.id!=a&&!p.prot).map(p=>p.id);
+const anyT=a=>alive().filter(p=>p.id==a||!p.prot).map(p=>p.id);
+const lg=t=>{st.log.push(t);if(st.log.length>60)st.log.shift()};
+const pl=(id,t)=>{(H.plog[id]=H.plog[id]||[]).push(t);H.pn[id]=(H.pn[id]||0)+1};
+const newP=(id,name)=>({id,name,off:false,out:false,prot:false,immune:false,discard:[],sane:0,mad:0,hand:0});
+const freshH=()=>({deck:[],hands:{},plog:{},pn:{},stack:[],aside:null,eggs:false,rand:null});
+function allowedCards(id){const h=H.hands[id]||[];const f=h.filter(c=>DEFS[c].v==7&&h.some(d=>d!=c&&DEFS[d].v>=5));return f.length?f:h}
+function priv(id){
+  const me={hand:H.hands[id]||[],plog:(H.plog[id]||[]).slice(-10),pn:H.pn[id]||0};
+  if(st.pending&&st.pending.pid==id&&st.pending.kind=='play')me.allowed=allowedCards(id);
+  if(H.rand&&H.rand.pid==id)me.rand=H.rand.cards;
+  return me;
+}
+function push(){
+  st.players.forEach(p=>p.hand=(H.hands[p.id]||[]).length);
+  st.deckN=H.deck.length;st.top=st.vis&&H.deck.length?H.deck[H.deck.length-1]:null;st.eggs=H.eggs;
+  st.players.forEach(p=>{if(p.id!=myId&&conns[p.id]&&conns[p.id].open)conns[p.id].send({S:st,me:priv(p.id)})});
+  render();
+}
+
+/* ---------- flujo de ronda y turno ---------- */
+function startRound(starterId){
+  const ids=DEFS.map((_,i)=>i).filter(i=>i!=EGGS);shuf(ids);
+  H.deck=ids;H.eggs=true;H.stack=[];H.rand=null;H.plog={};H.pn={};H.hands={};
+  H.aside=H.deck.pop();
+  st.removed=[];if(N()==2)for(let i=0;i<5;i++)st.removed.push(H.deck.pop());
+  st.players.forEach(p=>{p.out=false;p.prot=false;p.immune=false;p.discard=[];H.hands[p.id]=[H.deck.pop()]});
+  st.round++;st.vis=false;st.rlyeh=null;st.inplay=[];st.pending=null;st.reveal=null;st.roundWinners=null;
+  st.turn=st.players.findIndex(p=>p.id==starterId);
+  st.phase='turn';lg(`— RONDA ${st.round} — empieza ${nm(starterId)}`);
+  beginTurn();
+}
+function beginTurn(){
+  const p=st.players[st.turn];
+  if(p.out)return nextTurn();
+  p.prot=false;
+  if(st.rlyeh==p.id){st.pending={pid:p.id,kind:'rlyehEnd'};return push()}
+  turnMain(false);
+}
+function turnMain(extra){
+  const p=st.players[st.turn];
+  if(!extra&&isMad(p)){if(!sanity(p))return}
+  if(!H.deck.length)return endByDeck();
+  H.hands[p.id].push(H.deck.pop());
+  st.pending={pid:p.id,kind:'play',extra:!!extra};
+  push();
+}
+function sanity(p){
+  const n=p.discard.filter(c=>DEFS[c].o).length;let fail=false,exh=false;
+  lg(`🧠 ${p.name} hace una Prueba de Cordura (${n} carta${n>1?'s':''})`);
+  for(let i=0;i<n;i++){
+    if(!H.deck.length){exh=true;break}
+    const c=H.deck.pop();p.discard.push(c);lg(`   revela ${cn(c)}${DEFS[c].o?' (Otro Mundo)':''}`);
+    if(DEFS[c].o){fail=true;break}
+  }
+  if(!H.deck.length)exh=true;
+  if(fail){
+    if(p.immune)lg('   Fracasa, pero el Necronomicón lo mantiene en la ronda.');
+    else{eliminate(p.id,'fracasó la Prueba de Cordura');if(st.phase!='turn')return false}
+  }else lg('   La supera.');
+  if(exh){endByDeck();return false}
+  if(p.out){nextTurn();return false}
+  return true;
+}
+function nextTurn(){
+  H.stack=[];st.inplay=[];st.pending=null;
+  if(checkOnlyOne())return;
+  do{st.turn=(st.turn+1)%N()}while(st.players[st.turn].out);
+  beginTurn();
+}
+function checkOnlyOne(){
+  const al=alive();
+  if(st.phase=='turn'&&al.length==1){endRound([al[0].id],'último investigador en pie');return true}
+  return false;
+}
+function eliminate(pid,why){
+  const p=P(pid);if(!p||p.out)return false;
+  if(p.immune){lg(`🛡 ${p.name} se libra de ser eliminado gracias al Necronomicón`);return false}
+  p.out=true;const h=H.hands[pid]||[];H.hands[pid]=[];h.forEach(c=>p.discard.push(c));
+  lg(`💀 ${p.name} queda eliminado (${why})`+(h.length?` · descarta ${h.map(cn).join(', ')}`:''));
+  checkOnlyOne();return true;
+}
+function discardFromHand(pid,card){
+  const p=P(pid);p.discard.push(card);lg(`   ${p.name} descarta ${cn(card)}`);
+  const k=DEFS[card].k;
+  if(k=='diletante'||k=='cthulhu')eliminate(pid,`descartó ${cn(card)}`);
+}
+function endByDeck(){
+  if(st.phase!='turn')return;
+  const al=alive(),val=p=>(H.hands[p.id]&&H.hands[p.id].length)?DEFS[H.hands[p.id][0]].v:-1;
+  const mx=Math.max(...al.map(val)),w=al.filter(p=>val(p)==mx).map(p=>p.id);
+  lg('📚 El mazo se agota: todos revelan su carta.');
+  endRound(w,'carta más alta');
+}
+function endRound(winners,why,gameWin){
+  if(st.phase!='turn')return;
+  st.reveal={};alive().forEach(p=>st.reveal[p.id]=[...(H.hands[p.id]||[])]);
+  if(!gameWin)winners.forEach(id=>{const p=P(id);if(isMad(p))p.mad++;else p.sane++});
+  st.inplay.forEach(x=>P(x.pid).discard.push(x.card));
+  st.inplay=[];H.stack=[];st.pending=null;H.rand=null;
+  st.roundWinners=winners;st.why=why;
+  lg(`🏁 ${gameWin?'Partida':'Ronda'} para ${winners.map(nm).join(' y ')} (${why})`);
+  const gw=gameWin?winners:st.players.filter(p=>p.sane>=2||p.mad>=3).map(p=>p.id);
+  if(gw.length){st.phase='gameEnd';st.gameWinners=gw}
+  else{st.phase='roundEnd';st.next=winners[Math.floor(Math.random()*winners.length)]}
+  push();
+}
+
+/* ---------- jugar cartas y efectos ---------- */
+function doPlay(id,card,mode){
+  const h=H.hands[id];h.splice(h.indexOf(card),1);
+  const fr={actor:id,card,mode,step:0};
+  H.stack.push(fr);st.inplay.push({pid:id,card,mode});
+  lg(`▶ ${nm(id)} juega ${cn(card)} (${DEFS[card].k=='huevos'?'—':mode=='m'?'Locura':'Lucidez'})`);
+  run(fr);
+}
+function done(fr){
+  if(st.phase!='turn')return;
+  H.stack.pop();
+  st.inplay=st.inplay.filter(x=>x.card!=fr.card);
+  P(fr.actor).discard.push(fr.card);
+  st.pending=null;
+  if(H.stack.length)return done(H.stack[H.stack.length-1]);
+  if(checkOnlyOne())return;
+  nextTurn();
+}
+function run(fr,arg){
+  if(st.phase!='turn')return;
+  const a=fr.actor,d=DEFS[fr.card],k=d.k,v=d.v,step=fr.step||0;
+  const ask=(tg,o={})=>{
+    if(!tg.length){lg('   Sin objetivos posibles: la carta no tiene efecto.');return done(fr)}
+    st.pending=Object.assign({pid:a,kind:'target',card:fr.card,targets:tg},o);push();
+  };
+  const hv=(id,val)=>(H.hands[id]||[]).some(x=>DEFS[x].v==val);
+  if(k=='huevos'){eliminate(a,'jugó los Huevos de parásitos');return done(fr)}
+  if(fr.mode=='m'){
+    switch(k){
+    case 'rlyeh':
+      st.vis=true;st.rlyeh=a;lg('   La siguiente carta del mazo queda visible para todos.');return done(fr);
+    case 'sectarios':{
+      if(step==0){fr.step=1;return ask(otherT(a))}
+      if(step==1){
+        const t=arg.target;lg(`   ${nm(a)} acusa a ${nm(t)}: ¿tiene un 1?`);
+        if(hv(t,1)){lg('   ¡Sí!');eliminate(t,'tenía un 1');return done(fr)}
+        lg('   No. Nombra otro valor.');fr.t=t;fr.step=2;
+        st.pending={pid:a,kind:'target',card:fr.card,targets:[t],value:true,noVal:1,fixed:true};return push();
+      }
+      const t=fr.t,val=arg.value;lg(`   ${nm(a)} dice ${val} a ${nm(t)}`);
+      if(hv(t,val)){lg('   ¡Sí!');eliminate(t,`tenía un ${val}`)}else lg('   No.');
+      return done(fr);}
+    case 'angel':{
+      if(step==0){fr.step=1;return ask(otherT(a))}
+      if(step==1){
+        const t=arg.target;pl(a,`Ves que ${nm(t)} tiene ${cn(H.hands[t][0])} (${DEFS[H.hands[t][0]].v})`);
+        lg(`   ${nm(a)} mira en secreto la carta de ${nm(t)} y juega un turno extra`);
+        fr.step=2;return turnMain(true);
+      }
+      return done(fr);}
+    case 'profundo':
+      if(step==0){fr.step=1;return ask(alive().filter(p=>p.id!=a&&!p.prot&&!isMad(p)).map(p=>p.id))}
+      eliminate(arg.target,'Profundo');return done(fr);
+    case 'necro':
+      P(a).immune=true;lg(`   ${nm(a)} ya no puede ser eliminado en esta ronda`);return done(fr);
+    case 'parasito':{
+      if(step==0){fr.step=1;return ask(otherT(a))}
+      if(step==1){
+        const t=arg.target,x=H.hands[t][0];
+        H.hands[t]=[EGGS];H.eggs=false;H.hands[a].push(x);
+        pl(a,`Robas ${cn(x)} (${DEFS[x].v}) de ${nm(t)}`);pl(t,'Te han robado la carta: ahora tienes los Huevos de parásitos (0).');
+        lg(`   ${nm(a)} roba la carta de ${nm(t)}, que recibe los Huevos de parásitos`);
+        fr.step=2;st.pending={pid:a,kind:'play',child:true};return push();
+      }
+      return done(fr);}
+    case 'randall':{
+      const cards=[];alive().forEach(p=>{cards.push(...H.hands[p.id]);H.hands[p.id]=[]});shuf(cards);
+      H.rand={pid:a,cards};lg(`   ${nm(a)} reúne las cartas de todos para repartirlas`);
+      st.pending={pid:a,kind:'randall',ids:alive().map(p=>p.id)};return push();}
+    case 'shoggoth':{
+      const h=H.hands[a];
+      if(h.length&&DEFS[h[0]].v>=5){lg(`   ${nm(a)} revela ${cn(h[0])} y gana la ronda`);return endRound([a],'Shoggoth')}
+      lg('   Sin carta de valor 5 o más: no pasa nada.');return done(fr);}
+    case 'cthulhu':{
+      const n=P(a).discard.filter(c=>DEFS[c].o).length+H.stack.slice(0,-1).filter(f=>['angel','parasito'].includes(DEFS[f.card].k)).length;
+      if(n>=2){lg(`   ${nm(a)} tiene ${n} cartas de Otro Mundo: ¡Cthulhu despierta!`);return endRound([a],'Cthulhu despierta',true)}
+      lg(`   Solo ${n} carta${n==1?'':'s'} de Otro Mundo: la locura no basta.`);
+      eliminate(a,'invocó a Cthulhu sin suficiente locura');return done(fr);}
+    }
+  }
+  switch(v){
+  case 0:{
+    if(step==0){fr.step=1;return ask(anyT(a))}
+    const t=arg.target,cs=[];let ex=false;
+    for(let i=0;i<2;i++){if(!H.deck.length){ex=true;break}cs.push(H.deck.pop())}
+    P(t).discard.push(...cs);lg(`   Se revelan ${cs.map(cn).join(' y ')} y pasan al descarte de ${nm(t)}`);
+    if(ex||!H.deck.length){lg('   El mazo se agota.');return endByDeck()}
+    return done(fr);}
+  case 1:{
+    if(step==0){fr.step=1;return ask(otherT(a),{value:true,noVal:1})}
+    const t=arg.target,val=arg.value;lg(`   ${nm(a)} dice ${val} a ${nm(t)}`);
+    if(hv(t,val)){lg('   ¡Sí!');eliminate(t,`tenía un ${val}`)}else lg('   No.');
+    return done(fr);}
+  case 2:{
+    if(step==0){fr.step=1;return ask(otherT(a))}
+    const t=arg.target,x=H.hands[t][0];
+    pl(a,`Ves que ${nm(t)} tiene ${cn(x)} (${DEFS[x].v})`);lg(`   ${nm(a)} mira en secreto la carta de ${nm(t)}`);
+    return done(fr);}
+  case 3:{
+    if(step==0){fr.step=1;return ask(otherT(a))}
+    const t=arg.target,x=H.hands[a][0],y=H.hands[t][0],vx=DEFS[x].v,vy=DEFS[y].v;
+    pl(a,`Comparas con ${nm(t)}: tiene ${cn(y)} (${vy})`);pl(t,`${nm(a)} compara contigo: tenía ${cn(x)} (${vx})`);
+    lg(`   ${nm(a)} y ${nm(t)} comparan sus cartas en secreto`);
+    if(vx<vy)eliminate(a,'perdió la comparación');else if(vy<vx)eliminate(t,'perdió la comparación');else lg('   Empate: nadie queda eliminado.');
+    return done(fr);}
+  case 4:
+    P(a).prot=true;lg(`   ${nm(a)} queda protegido hasta su próximo turno`);return done(fr);
+  case 5:{
+    if(step==0){fr.step=1;return ask(anyT(a))}
+    const t=arg.target,cd=H.hands[t][0];H.hands[t]=[];
+    discardFromHand(t,cd);if(st.phase!='turn')return;
+    if(!P(t).out){
+      let nc=null;
+      if(H.deck.length)nc=H.deck.pop();else if(H.aside!=null){nc=H.aside;H.aside=null;lg('   Roba la carta apartada al inicio de la ronda')}
+      if(nc==null)return endByDeck();
+      H.hands[t].push(nc);
+    }
+    return done(fr);}
+  case 6:{
+    if(step==0){fr.step=1;return ask(otherT(a))}
+    const t=arg.target,x=H.hands[a];H.hands[a]=H.hands[t];H.hands[t]=x;
+    lg(`   ${nm(a)} intercambia su mano con ${nm(t)}`);return done(fr);}
+  case 7:return done(fr);
+  case 8:
+    lg(`   ${cn(fr.card)} no perdona…`);eliminate(a,`jugó ${cn(fr.card)}`);return done(fr);
+  }
+}
+
+/* ---------- acciones de jugadores (solo anfitrión) ---------- */
+function act(id,m){
+  const p=P(id);if(!p)return;
+  const pd=st.pending,turn=st.phase=='turn';
+  if(m.t=='start'&&id==myId&&st.phase=='lobby'&&N()>=2){
+    st.players.forEach(x=>{x.sane=0;x.mad=0});st.round=0;st.log=[];
+    return startRound(st.players[Math.floor(Math.random()*N())].id);
+  }
+  if(m.t=='play'&&turn&&pd&&pd.kind=='play'&&pd.pid==id){
+    if(!allowedCards(id).includes(m.c))return;
+    let mode='l';
+    if(m.mode=='m'){if(!(DEFS[m.c].o&&DEFS[m.c].k!='huevos'&&isMad(p)))return;mode='m'}
+    st.pending=null;return doPlay(id,m.c,mode);
+  }
+  if(m.t=='pick'&&turn&&pd&&pd.kind=='target'&&pd.pid==id){
+    if(!pd.targets.includes(m.target))return;
+    let val=null;
+    if(pd.value){val=+m.value;if(!Number.isInteger(val)||val<0||val>8||val===pd.noVal)return}
+    const fr=H.stack[H.stack.length-1];st.pending=null;return run(fr,{target:m.target,value:val});
+  }
+  if(m.t=='give'&&turn&&pd&&pd.kind=='randall'&&pd.pid==id&&H.rand){
+    const g=m.g||{},cards=H.rand.cards,used=new Set();
+    for(const x of pd.ids){const i=g[x];if(!Number.isInteger(i)||i<0||i>=cards.length||used.has(i))return;used.add(i)}
+    pd.ids.forEach(x=>H.hands[x]=[cards[g[x]]]);
+    H.rand=null;st.pending=null;lg(`   ${nm(id)} reparte las cartas`);
+    return done(H.stack[H.stack.length-1]);
+  }
+  if(m.t=='rl'&&turn&&pd&&pd.kind=='rlyehEnd'&&pd.pid==id){
+    st.rlyeh=null;st.pending=null;
+    if(m.v){lg(`   ${nm(id)} da por finalizada la ronda`);return endByDeck()}
+    return turnMain(false);
+  }
+  if(m.t=='next'&&id==myId&&st.phase=='roundEnd')return startRound(st.next);
+  if(m.t=='again'&&id==myId&&st.phase=='gameEnd'){
+    st.phase='lobby';st.round=0;st.reveal=null;st.pending=null;st.inplay=[];
+    st.players.forEach(x=>{x.sane=0;x.mad=0;x.discard=[];x.out=false;x.prot=false;x.immune=false});
+    H=freshH();return push();
+  }
+}
+/*ENGINE-END*/
+
+/* ---------- red ---------- */
+const paso=t=>{$('#board').innerHTML=`<div class="panel"><p>${t}</p></div>`};
+let avsCb=null;
+function cerrarAviso(){const a=document.getElementById('avs');if(!a.classList.contains('show'))return;a.classList.remove('show');const f=avsCb;avsCb=null;if(f)f()}
+function aviso(t,m,cb){const a=document.getElementById('avs');document.getElementById('avs-t').textContent=t;document.getElementById('avs-m').textContent=m.replace(/<[^>]+>/g,'');avsCb=cb||null;a.classList.add('show');document.getElementById('avs-ok').focus()}
+document.getElementById('avs-ok').addEventListener('click',cerrarAviso);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarAviso()});
+const fallo=m=>{paso('<span class="dim">Conexión interrumpida…</span>');aviso('ERROR DE TRANSMISIÓN',m,()=>location.reload())};
+const cargar=u=>new Promise((ok,ko)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
+async function asegurarPeer(){
+  for(const u of ['https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js']){
+    if(window.Peer)return true;
+    try{await cargar(u)}catch(e){}
+  }
+  return !!window.Peer;
+}
+function home(){
+  $('#board').innerHTML=`<div class="panel"><h1>LOVECRAFT LETTER</h1><p class="dim">Juego de cartas de deducción y locura · 2-6 jugadores</p>
+  <button onclick="pantallaForm('crear')">CREAR SALA</button><button onclick="pantallaForm('unir')">UNIRSE A SALA</button></div>`;
+}
+function pantallaForm(m){
+  modo=m;
+  $('#board').innerHTML=`<div class="panel"><h2>${m=='crear'?'NUEVA SALA':'UNIRSE'}</h2>
+  <input id="nom" maxlength="14" placeholder="Tu nombre"><br>
+  ${m=='crear'?`<select id="max">${[2,3,4,5,6].map(n=>`<option ${n==4?'selected':''}>${n}</option>`).join('')}</select> jugadores máx.`:`<input id="cod" maxlength="4" placeholder="CÓDIGO" style="text-transform:uppercase">`}
+  <p class="dim">Al entrar el navegador pedirá permiso de cámara y micrófono.</p>
+  <button onclick="home()">ATRÁS</button><button onclick="entrar()">ENTRAR</button></div>`;
+}
+async function entrar(){
+  const nombre=$('#nom').value.trim();if(!nombre)return aviso('DATOS INCOMPLETOS','Escribe tu nombre.');
+  const cod=modo=='unir'?$('#cod').value.trim().toUpperCase():Math.random().toString(36).slice(2,6).toUpperCase();
+  if(modo=='unir'&&cod.length!=4)return aviso('CÓDIGO INCORRECTO','El código de sala tiene 4 caracteres.');
+  const max=modo=='crear'?+$('#max').value:0;
+  try{
+    paso('1/3 Cargando conexión…');
+    if(!await asegurarPeer())return fallo('No se pudo cargar PeerJS. Desactiva el bloqueo de rastreo o los bloqueadores para esta web y recarga.');
+    paso('2/3 Pidiendo cámara y micrófono… (acepta el aviso del navegador)');
+    if(!await Cam.start())aviso('SIN IMAGEN','No hay acceso a cámara o micrófono. Podrás jugar, pero no se te verá.');
+    paso('3/3 Conectando con el servidor…');
+    if(modo=='crear')crear(cod,nombre,max);else unirse(cod,nombre);
+    setTimeout(()=>{if(!myId)fallo('El servidor de PeerJS no responde. Recarga e inténtalo de nuevo, o prueba otra red.')},15000);
+  }catch(e){fallo('Error: '+esc(e.message||e))}
+}
+function crear(code,nombre,max){
+  host=true;peer=new Peer('lovecraft-'+code);
+  peer.on('error',e=>fallo('Error de red: '+esc(e.type)));
+  peer.on('open',id=>{myId=id;Cam.attach(peer);H=freshH();
+    st={code,max,phase:'lobby',players:[newP(id,nombre)],round:0,log:[],inplay:[],pending:null,removed:[],turn:0};
+    push()});
+  peer.on('connection',c=>{conns[c.peer]=c;
+    c.on('data',m=>{
+      if(m.t=='join'){
+        const nm0=String(m.name||'').slice(0,14),ex=st.players.find(p=>p.name.toLowerCase()==nm0.toLowerCase());
+        if(st.phase!='lobby'){
+          if(!ex||ex.id==myId)return c.send({err:'Partida en curso. Para volver a entrar usa exactamente el mismo nombre que tenías.'});
+          renombrar(ex.id,c.peer);push();return;
+        }
+        if(st.players.length>=st.max)return c.send({err:'Sala llena'});
+        let n=nm0,k=2;while(st.players.some(p=>p.name.toLowerCase()==n.toLowerCase()))n=nm0+k++;
+        st.players.push(newP(c.peer,n));push();
+      }else act(c.peer,m)});
+    c.on('close',()=>{
+      if(conns[c.peer]===c)delete conns[c.peer];
+      const p=st.players.find(x=>x.id==c.peer);if(!p)return;
+      if(st.phase=='lobby')st.players=st.players.filter(x=>x!==p);else p.off=true;
+      push();
+    });
+  });
+}
+function renombrar(o,n){
+  try{conns[o]&&conns[o].close()}catch(e){}
+  delete conns[o];
+  const rep=x=>JSON.parse(JSON.stringify(x).split('"'+o+'"').join('"'+n+'"'));
+  st=rep(st);H=rep(H);
+  st.players.find(x=>x.id==n).off=false;
+}
+function unirse(code,nombre){
+  peer=new Peer();
+  peer.on('error',e=>fallo(e.type=='peer-unavailable'?'Sala no encontrada. Revisa el código.':'Error de red: '+esc(e.type)));
+  peer.on('open',id=>{myId=id;Cam.attach(peer);
+    conn=peer.connect('lovecraft-'+code,{reliable:true});
+    conn.on('open',()=>conn.send({t:'join',name:nombre}));
+    setTimeout(()=>{if(!st)fallo('La sala no responde. Comprueba el código.')},15000);
+    conn.on('data',d=>{if(d.err)return fallo(esc(d.err));st=d.S;mine=d.me;render()});
+    conn.on('close',()=>aviso('TRANSMISIÓN CORTADA','El anfitrión se ha desconectado.',()=>location.reload()));
+  });
+}
+function send(m){host?act(myId,m):conn.send(m)}
+
+/* ---------- interfaz ---------- */
+const jugar=(c,m)=>send({t:'play',c,mode:m});
+const tg=id=>{selT=id;render()};
+const setV=v=>{selV=v;render()};
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',9000)}
+function cardHTML(id,cls=''){
+  const d=DEFS[id];
+  const body=d.k=='huevos'?`<div class="ct">${LOC.huevos}</div>`:`<div class="ct"><b>Lucidez:</b> ${LUC[d.v]}</div>${d.o?`<div class="cm"><b>Locura:</b> ${LOC[d.k]}</div>`:''}`;
+  return `<div class="card ${d.o?'om':'ar'} ${cls}" data-card="${id}"><div class="cv">${d.v}</div><div class="cn">${esc(d.n)}</div>${body}<div class="cx">${d.o?'OTRO MUNDO':'ARKHAM'}</div></div>`;
+}
+const chip=id=>{const d=DEFS[id];return `<span class="chip ${d.o?'om':'ar'}" data-card="${id}" title="${esc(d.n)}">${d.v}·${esc(d.n.replace(/^(El|La|Los) /,'').slice(0,6))}</span>`};
+const madOf=p=>p.discard.some(c=>DEFS[c].o);
+const nmS=id=>esc((st.players.find(p=>p.id==id)||{}).name||'?');
+
+function promptHTML(S){
+  const pd=S.pending;if(!pd)return '';
+  const soy=pd.pid==myId,who=nmS(pd.pid);
+  if(pd.kind=='play')return soy?`<p><b>${pd.child?'Juega 1 de tus 2 cartas':pd.extra?'Turno extra: juega una carta':'Tu turno: juega una carta'}</b></p>`:`<p class="dim">${who} está eligiendo carta…</p>`;
+  if(pd.kind=='rlyehEnd')return soy?`<p>R'lyeh sigue activo. ¿Das la ronda por terminada?</p><button onclick="send({t:'rl',v:true})">FINALIZAR RONDA</button><button onclick="send({t:'rl',v:false})">SEGUIR JUGANDO</button>`:`<p class="dim">${who} decide si termina la ronda…</p>`;
+  const pk=JSON.stringify([pd.kind,pd.card,pd.fixed,pd.targets,pd.ids])+S.round+S.turn;
+  if(pk!=lastPK){lastPK=pk;selT=pd.fixed?pd.targets[0]:null;selV='';rsel={}}
+  if(pd.kind=='target'){
+    if(!soy)return `<p class="dim">${who} está resolviendo ${esc(DEFS[pd.card].n)}…</p>`;
+    let h=`<p><b>${esc(DEFS[pd.card].n)}</b>: elige ${pd.fixed?'otro valor':'objetivo'}${pd.value&&!pd.fixed?' y un valor':''}</p>`;
+    if(!pd.fixed)h+=pd.targets.map(id=>`<button class="${selT==id?'on':''}" onclick="tg('${id}')">${nmS(id)}${id==myId?' (tú)':''}</button>`).join('');
+    if(pd.value)h+=`<br>Valor: <select onchange="setV(this.value)"><option value="">—</option>${[0,1,2,3,4,5,6,7,8].filter(x=>x!==pd.noVal).map(x=>`<option value="${x}" ${selV==String(x)?'selected':''}>${x}</option>`).join('')}</select>`;
+    h+=`<br><button ${selT&&(!pd.value||selV!=='')?'':'disabled'} onclick="send({t:'pick',target:selT,value:selV===''?null:+selV})">CONFIRMAR</button>`;
+    return h;
+  }
+  if(pd.kind=='randall'){
+    if(!soy)return `<p class="dim">${who} está repartiendo las cartas…</p>`;
+    const cards=mine.rand||[],L='ABCDEFGH';
+    const all=pd.ids.every(x=>Number.isInteger(rsel[x])),uniq=new Set(pd.ids.map(x=>rsel[x])).size==pd.ids.length;
+    return `<p><b>Reparte las cartas</b> (1 por jugador, tú incluido):</p><div>${cards.map((c,i)=>`<span class="chip ${DEFS[c].o?'om':'ar'}">${L[i]}: ${DEFS[c].v} ${esc(DEFS[c].n)}</span>`).join(' ')}</div>`+
+      pd.ids.map(x=>`<div>${nmS(x)}${x==myId?' (tú)':''}: <select onchange="rsel['${x}']=this.value===''?null:+this.value;render()"><option value="">—</option>${cards.map((c,i)=>`<option value="${i}" ${rsel[x]===i?'selected':''}>${L[i]}</option>`).join('')}</select></div>`).join('')+
+      `<button ${all&&uniq?'':'disabled'} onclick="send({t:'give',g:rsel})">REPARTIR</button>`;
+  }
+  return '';
+}
+function boardHTML(S){
+  const PL=S.players,me=PL.find(p=>p.id==myId);
+  let h='<div class="players">';
+  PL.forEach((p,i)=>{
+    const m=madOf(p),turn=S.phase=='turn'&&i==S.turn;
+    h+=`<div class="pb ${p.out?'out':''} ${turn?'turn':''} ${p.id==myId?'me':''}">
+    <div class="pn">${turn?'▶ ':''}${esc(p.name)}${p.id==myId?' (tú)':''}${p.off?' ⚠':''}</div>
+    <div class="${p.out?'st-out':m?'st-mad':'st-sane'}">${p.out?'💀 ELIMINADO':m?'🌀 LOCO':'🧠 CUERDO'}${p.prot?' 🛡':''}${p.immune?' ✦':''}</div>
+    <div class="dim">Fichas: 🧠${p.sane}/2 · 🌀${p.mad}/3 · mano: ${p.hand}</div>
+    <div class="dc">${p.discard.map(chip).join('')||'<span class="dim">descarte vacío</span>'}</div></div>`;
+  });
+  h+='</div><div class="mid">';
+  h+=`<div class="zone"><div class="zt">MAZO</div><div class="back">${S.deckN}</div><div class="back" title="Carta apartada">?</div>`+
+     `<div class="dim">Ronda ${S.round} · apartada: 1</div>`+
+     (S.top!=null?`<div class="dim">Siguiente carta (R'lyeh):</div>${cardHTML(S.top,'sm')}`:'')+
+     (S.eggs?`<div class="dim">Huevos de parásitos:</div>${cardHTML(EGGS,'sm')}`:'<div class="dim">Huevos de parásitos: en juego</div>')+
+     (S.removed&&S.removed.length?`<div class="dim">Apartadas boca arriba:</div><div>${S.removed.map(chip).join('')}</div>`:'')+`</div>`;
+  h+='<div class="zone playzone"><div class="zt">MESA</div>';
+  if(S.inplay&&S.inplay.length)h+=S.inplay.map(x=>`<div class="inpl"><div class="dim">${nmS(x.pid)} · ${DEFS[x.card].k=='huevos'?'—':x.mode=='m'?'LOCURA':'LUCIDEZ'}</div>${cardHTML(x.card,'sm')}</div>`).join('');
+  h+=promptHTML(S);
+  if(S.phase=='roundEnd'||S.phase=='gameEnd'){
+    const end=S.phase=='gameEnd',ws=end?S.gameWinners:S.roundWinners;
+    h+=`<h2 class="${end?'st-mad':'st-sane'}">${end?'¡GANA LA PARTIDA!':'FIN DE RONDA'}</h2><p><b>${ws.map(nmS).join(' y ')}</b> <span class="dim">(${esc(S.why||'')})</span></p>`;
+    if(end&&!S.why.startsWith('Cthulhu'))h+='<p class="dim">Han reunido las fichas necesarias.</p>';
+    if(S.reveal)h+=PL.filter(p=>S.reveal[p.id]).map(p=>`<div>${nmS(p.id)}: ${(S.reveal[p.id]||[]).map(chip).join('')||'—'}</div>`).join('');
+    h+=host?`<button onclick="send({t:'${end?'again':'next'}'})">${end?'VOLVER A LA SALA':'SIGUIENTE RONDA'}</button>`:'<p class="dim">Esperando al anfitrión…</p>';
+  }
+  h+='</div>';
+  h+=`<div class="zone logbox" id="logbox">${(S.log||[]).map(l=>`<div>${esc(l)}</div>`).join('')}</div></div>`;
+  if(me){
+    const pend=S.pending,myPlay=S.phase=='turn'&&pend&&pend.kind=='play'&&pend.pid==myId;
+    const al=mine.allowed||[],m=madOf(me);
+    h+=`<div class="hand">`+(me.out?'<p class="st-out">Estás eliminado en esta ronda.</p>':(mine.hand||[]).map(c=>{
+      const d=DEFS[c],ok=myPlay&&al.includes(c);
+      return `<div class="hcard">${cardHTML(c)}<div>`+(ok?(d.k=='huevos'?`<button onclick="jugar(${c},'l')">JUGAR</button>`:`<button onclick="jugar(${c},'l')">LUCIDEZ</button>`+(m&&d.o?`<button class="no" onclick="jugar(${c},'m')">LOCURA</button>`:'')):'')+`</div></div>`;
+    }).join(''))+`</div>`;
+    if(mine.plog&&mine.plog.length)h+=`<div class="plog">${mine.plog.map(l=>`<div>🔒 ${esc(l)}</div>`).join('')}</div>`;
+  }
+  return h;
+}
+function render(){
+  const S=st,PL=S.players;if(host)mine=priv(myId);
+  PL.forEach(p=>{if(p.id!=myId)Cam.names[p.id]=p.name});
+  PL.forEach(p=>{if(p.id!=myId&&!p.off&&myId<p.id)Cam.call(p.id)});
+  let h;
+  if(S.phase=='lobby'){
+    h=`<div class="panel"><h2>SALA ${S.code}</h2><p class="dim">Comparte este código · ${PL.length}/${S.max} jugadores</p>
+    <div>${PL.map((p,i)=>`<div>${esc(p.name)}${i==0?' 👑':''}</div>`).join('')}</div>`+
+    (host?(PL.length>=2?'<button onclick="send({t:\'start\'})">EMPEZAR PARTIDA</button>':'<p class="dim">Hacen falta al menos 2 jugadores</p>'):'<p class="dim">Esperando al anfitrión…</p>')+'</div>';
+  }else h=boardHTML(S);
+  hideZoom();const y=$('#board').scrollTop;
+  $('#board').innerHTML=h;$('#board').scrollTop=y;
+  const lb=$('#logbox');if(lb)lb.scrollTop=lb.scrollHeight;
+  if(mine.pn&&mine.pn!=lastPn&&mine.plog&&mine.plog.length)toast('🔒 '+mine.plog[mine.plog.length-1]);
+  lastPn=mine.pn||0;
+  if(S.phase=='lobby'){amb.pause();amb.currentTime=0}else if(amb.paused)amb.play().catch(()=>{});
+  PL.forEach((p,i)=>{const k=p.id==myId?'yo':p.id;
+    Cam.label(k,p.id==myId?p.name+' (tú)':p.name);
+    Cam.tag(k,(S.phase=='turn'&&i==S.turn?'▶':'')+(p.out?'💀':'')+(p.prot?'🛡':''))});
+}
+
+/* ---------- zoom de cartas al pasar el cursor ---------- */
+let zoomEl=null;
+function hideZoom(){zoomEl=null;const z=$('#zoom');if(z)z.style.display='none'}
+function zoomFallback(id){$('#zoom').innerHTML=cardHTML(id,'big')}
+function showZoom(el,id){
+  if(zoomEl===el)return;zoomEl=el;
+  const z=$('#zoom'),vw=innerWidth,vh=innerHeight,g=10;
+  const h=Math.min(440,vh-16),w=Math.round(h*0.714);
+  z.style.width=w+'px';z.style.height=h+'px';
+  z.innerHTML=`<img src="images/lc_${DEFS[id].k}.jpg" alt="" onerror="zoomFallback(${id})">`;
+  const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  const fit={right:vw-r.right>=w+g,left:r.left>=w+g,top:r.top>=h+g,bottom:vh-r.bottom>=h+g};
+  const order=cy>vh/2?['top','right','left','bottom']:['bottom','right','left','top'];
+  let side=order.find(s=>fit[s]);
+  if(!side){const sp={right:vw-r.right,left:r.left,top:r.top,bottom:vh-r.bottom};side=order.sort((a,b)=>sp[b]-sp[a])[0]}
+  let x,y;
+  if(side=='right'){x=r.right+g;y=cy-h/2}
+  else if(side=='left'){x=r.left-w-g;y=cy-h/2}
+  else if(side=='top'){x=cx-w/2;y=r.top-h-g}
+  else{x=cx-w/2;y=r.bottom+g}
+  x=Math.max(8,Math.min(vw-w-8,x));y=Math.max(8,Math.min(vh-h-8,y));
+  z.style.left=x+'px';z.style.top=y+'px';z.style.display='block';
+}
+document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('[data-card]');if(el&&!el.closest('#zoom'))showZoom(el,+el.dataset.card)});
+document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('[data-card]');if(el&&!el.contains(e.relatedTarget))hideZoom()});
+
+/* ---------- cartas de referencia a pantalla completa ---------- */
+function verRef(t){
+  const v=$('#refview'),f='images/lc_referencia_'+t+'.jpg';
+  v.innerHTML=`<img src="${f}" alt="" onerror="this.outerHTML='<p>Falta el archivo ${f}</p>'">`;
+  v.style.display='flex';hideZoom();
+}
+function cerrarRef(){$('#refview').style.display='none'}
+document.addEventListener('keydown',e=>{if(e.key=='Escape')cerrarRef()});
+
+/* ---------- modales ---------- */
+function abrir(n){
+  if(n=='cartas'){
+    const rows=[0,1,2,3,4,5,6,7,8].map(v=>{
+      const ar=DEFS.filter(d=>d.v==v&&!d.o&&d.k!='huevos'),om=DEFS.filter(d=>d.v==v&&d.o);
+      return `<tr><td><b>${v}</b></td><td>${[...new Set(ar.map(d=>d.n))].map(n=>`${esc(n)} ×${ar.filter(d=>d.n==n).length}`).join(' / ')}<br>${om.map(d=>esc(d.n)).join(' / ')}</td><td><b>Lucidez:</b> ${LUC[v]}${om.filter(d=>d.k!='huevos').map(d=>`<br><b>Locura (${esc(d.n)}):</b> ${LOC[d.k]}`).join('')}${om.some(d=>d.k=='huevos')?`<br><b>${esc(DEFS[EGGS].n)}:</b> ${LOC.huevos}`:''}</td></tr>`;
+    }).join('');
+    $('#cartas-body').innerHTML=`<h3>Cómo se juega (resumen)</h3>
+    <p>Cada ronda se aparta 1 carta boca abajo (y 5 boca arriba con 2 jugadores) y cada jugador recibe 1 carta. En tu turno: si estás Loco, haces una Prueba de Cordura; robas; juegas una de tus 2 cartas resolviendo su Lucidez (o su Locura si estás Loco); y la descartas.</p>
+    <p>Estás <b>Loco</b> en cuanto tengas una carta de Otro Mundo en tu descarte. Prueba de Cordura: revelas tantas cartas como Otro Mundo tengas en tu descarte; si sale una de Otro Mundo, quedas eliminado.</p>
+    <p>La ronda acaba cuando el mazo se agota (gana la carta más alta) o queda un solo jugador. El ganador recibe una ficha de Mitos (Cuerdo o Loco según su estado).</p>
+    <p>Ganas la partida con <b>2 fichas Cuerdo</b>, <b>3 fichas Loco</b> o resolviendo la Locura de <b>Cthulhu</b>.</p>
+    <h3>Cartas</h3><table>${rows}</table><p style="font-size:.75rem">Resumen redactado para esta versión digital. Consulta el manual completo en REGLAS.</p>`;
+  }
+  $('#modal-'+n).style.display='flex';
+}
+function cerrar(n){$('#modal-'+n).style.display='none'}
+function abrirReglas(){const f=$('#reglasPdf');if(!f.src.endsWith('lovecraft_reglas.pdf'))f.src='images/lovecraft_reglas.pdf';$('#modal-reglas').style.display='flex'}
+document.addEventListener('keydown',e=>{if(e.key=='Escape'){cerrar('cartas');cerrar('reglas')}});
+home();
+</script>
+</body>
+</html>
